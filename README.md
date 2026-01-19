@@ -81,6 +81,38 @@ Bu framework, sadece test yazmak için değil, **kurumsal ölçekte kalite güve
 
 ---
 
+## ⚡ Test Yazımını Hızlandırın (Playwright Recorder)
+
+Yeni test senaryolarını ve lokatörleri hızlıca tespit etmek için Playwright'ın dahili **Recorder** (codegen) aracını kullanabilirsiniz. Bu sistem, `.env` dosyasındaki `BASE_URL`'i otomatik yükler ve her oturum sonrası temizlik yapar.
+
+### 🎥 Adım Adım Kullanım:
+
+1.  **Aracı Başlatın:**
+    ```bash
+    # 1. Standart Mod (Kayıt sonrası temizlenir)
+    npm run codegen
+
+    # 2. Stealth Mod (Sadece Okur - Dosyayı şişirmez)
+    npm run codegen:stealth
+
+    # 3. Stealth Mod (Güncelle/Kaydet - Doğrulama çıkarsa kullanın)
+    npm run codegen:stealth-save
+    ```
+2.  **Etkileşime Geçin:** Açılan tarayıcıda senaryonuzu gerçekleştirin. Kodlar **Inspector** penceresinde üretilecektir.
+3.  **Lokatör Tespiti:** Pick Locator ile sayfadaki öğelerin en uygun selector'larını (`getByRole` vb.) kopyalayın.
+4.  **Oturumu Sıfırlama:** Eğer Stealth verilerini tamamen silmek isterseniz:
+    ```bash
+    npm run codegen:reset
+    ```
+
+> [!TIP]
+> **Dosya Şişmesini Önleme:** Günlük kullanımda `codegen:stealth` kullanın (Dosya boyutu artmaz). Eğer site tekrar doğrulama sormaya başlarsa `codegen:stealth-save` ile bir kez oturumu tazeleyin.
+
+> [!NOTE]
+> **İnsan Doğrulaması:** `codegen:stealth` modunu ilk kez çalıştırdığınızda doğrulama çıkabilir. Bir kez geçtikten sonra bilgileriniz kaydedilir; ancak temiz bir test kodu üretmek adına doğrulamayı geçtikten sonra Recorder'ı kapatıp ikinci kez çalıştırmanız önerilir.
+
+---
+
 ## 📂 Proje Yapısı ve Haritası
 
 Bu framework, **Single Responsibility** (Tek Sorumluluk) prensibine göre klasörlenmiştir:
