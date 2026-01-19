@@ -54,19 +54,48 @@ Bu framework, sadece test yazmak için değil, **kurumsal ölçekte kalite güve
     npx playwright test --project=contract
     ```
 
-### 🏷️ Tag (Etiket) Bazlı Çalıştırma
+### 🏷️ Tag (Etiket) Yönetimi ve Standartları
 
-Framework, testlerin kategorize edilmesi için `@smoke`, `@regression` gibi etiketleri kullanır.
+Framework, testlerin kategorize edilmesi ve seçici olarak çalıştırılması için Playwright'ın yerleşik `--grep` (regex tabanlı filtreleme) özelliğini kullanır.
+
+#### 🏗️ Etiketleme Mimarisi
 
 | Etiket | Tanım | Çalıştırma Komutu |
 | :--- | :--- | :--- |
-| `@smoke` | Kritik fonksiyonlar | `npm run test:smoke` |
-| `@regression` | Tüm senaryolar | `npm run test:regression` |
-| `@sanity` | Temel kontroller | `npm run test:sanity` |
-| `@api` / `@ui` | Katman bazlı | `npx playwright test --grep @api` |
+| `@smoke` | Sistemin en kritik fonksiyonları (Login, Sepete Ekle vb.) | `npm run test:smoke` |
+| `@regression` | Tüm detaylı kontrol ve uç senaryolar. | `npm run test:regression` |
+| `@sanity` | Temel işlevsel doğrulamalar. | `npm run test:sanity` |
+| `@api` | Sadece API katmanı testleri. | `npx playwright test --grep @api` |
+| `@ui` | Sadece tarayıcı üzerinden koşan testler. | `npx playwright test --grep @ui` |
 
-> [!TIP]
-> **Gelişmiş Filtreleme:** Birden fazla etiketi aynı anda çalıştırmak için (VEYA mantığı) `npx playwright test --grep "@smoke|@api"` komutunu kullanabilirsiniz.
+#### 🚀 Kullanım Standartları
+
+**1. Test Düzeyinde Etiketleme:**
+Tekil bir teste etiket eklemek için başlığın sonuna ekleyin:
+```javascript
+test('Giriş yapılabilmeli @smoke', async ({ pages }) => { ... });
+```
+
+**2. Grup (Describe) Düzeyinde Etiketleme:**
+Bloğa eklenen etiketler içindeki tüm testler için geçerli olur:
+```javascript
+test.describe('Kullanıcı API Testleri @api @regression', () => { ... });
+```
+
+**3. Çoklu Etiketleme:**
+Bir test birden fazla etikete sahip olabilir:
+```javascript
+test('Ödeme Testi @api @smoke', ...);
+```
+
+#### 🛠️ İleri Seviye Filtreleme Komutları
+
+- **VEYA (OR):** `npx playwright test --grep "@smoke|@api"`
+- **VE (AND):** `npx playwright test --grep "(?=.*@api)(?=.*@smoke)"`
+- **DEĞİL (Invert):** `npx playwright test --grep @regression --grep-invert @api`
+
+> [!IMPORTANT]
+> **Kural:** Her yeni test bloğu, raporlama düzeni için en az bir standart etiket (Örn: `@smoke` veya `@regression`) içermelidir.
 
 ### 🔍 Dosya ve Debug Bazlı
 *   **Belirli Bir Test Dosyasını Çalıştır:**
