@@ -26,7 +26,7 @@ const validate = ajv.compile(cmsSchema);
 test.describe('CMS API - Data Driven Tests @api', () => {
 
     for (const data of cmsTestData) {
-        test(`Sorgu: ${data.desc} - Başlık: "${data.title}" @regression`, async ({ request, baseURL }) => {
+        test(`Sorgu: ${data.desc} - Başlık: "${data.title}" @api @regression`, async ({ request, baseURL }) => {
             const cmsService = new CmsService(request, baseURL);
 
             console.log(`Running test for: ${data.desc}`);

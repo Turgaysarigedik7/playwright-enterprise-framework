@@ -4,7 +4,7 @@ const userData = require('../../data/users.json');
 // Login testleri sıfır oturum ile başlamalıdır
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test('Kullanıcı .env verisi (Ana Hesap) ile başarılı bir şekilde giriş yapabilmeli @smoke', async ({ pages, page }) => {
+test('Kullanıcı .env verisi (Ana Hesap) ile başarılı bir şekilde giriş yapabilmeli @smoke @sanity @ui', async ({ pages, page }) => {
     const loginPage = pages.get('loginPage');
     // Giriş sayfasına git
     await loginPage.navigateToLogin();
@@ -14,7 +14,7 @@ test('Kullanıcı .env verisi (Ana Hesap) ile başarılı bir şekilde giriş ya
     await expect(page).toHaveURL(/.*secure/);
 });
 
-test('Geçersiz kullanıcı bilgileri ile hata mesajı alınmalı @regression', async ({ pages, page }) => {
+test('Geçersiz kullanıcı bilgileri ile hata mesajı alınmalı @regression @ui', async ({ pages, page }) => {
     const loginPage = pages.get('loginPage');
     await loginPage.navigateToLogin();
     // JSON dosyasından gelen HATALI veri ile giriş yap
