@@ -90,9 +90,11 @@ test('Ödeme Testi @api @smoke', ...);
 
 #### 🛠️ İleri Seviye Filtreleme Komutları
 
-- **VEYA (OR):** `npx playwright test --grep "@smoke|@api"`
-- **VE (AND):** `npx playwright test --grep "(?=.*@api)(?=.*@smoke)"`
-- **DEĞİL (Invert):** `npx playwright test --grep @regression --grep-invert @api`
+| Senaryo | Mantık | Komut |
+| :--- | :--- | :--- |
+| **VEYA (OR)** | `@smoke` veya `@api` olanları çalıştırır. | `npx playwright test --grep "@smoke\|@api"` |
+| **VE (AND)** | Hem `@api` hem `@smoke` olanları çalıştırır. | `npx playwright test --grep "(?=.*@api)(?=.*@smoke)"` |
+| **DEĞİL (Invert)** | `@regression` olsun ama `@api` olmasın. | `npx playwright test --grep @regression --grep-invert @api` |
 
 > [!IMPORTANT]
 > **Kural:** Her yeni test bloğu, raporlama düzeni için en az bir standart etiket (Örn: `@smoke` veya `@regression`) içermelidir.
