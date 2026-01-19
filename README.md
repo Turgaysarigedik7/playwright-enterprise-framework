@@ -55,15 +55,18 @@ Bu framework, sadece test yazmak için değil, **kurumsal ölçekte kalite güve
     ```
 
 ### 🏷️ Tag (Etiket) Bazlı Çalıştırma
-*(Not: Test başlıklarınızda @smoke, @regression gibi etiketler varsa kullanılır)*
-*   **Sadece Smoke Testlerini Koştur:**
-    ```bash
-    npx playwright test --grep @smoke
-    ```
-*   **Smoke Harici Testleri Koştur:**
-    ```bash
-    npx playwright test --grep-invert @smoke
-    ```
+
+Framework, testlerin kategorize edilmesi için `@smoke`, `@regression` gibi etiketleri kullanır.
+
+| Etiket | Tanım | Çalıştırma Komutu |
+| :--- | :--- | :--- |
+| `@smoke` | Kritik fonksiyonlar | `npm run test:smoke` |
+| `@regression` | Tüm senaryolar | `npm run test:regression` |
+| `@sanity` | Temel kontroller | `npm run test:sanity` |
+| `@api` / `@ui` | Katman bazlı | `npx playwright test --grep @api` |
+
+> [!TIP]
+> **Gelişmiş Filtreleme:** Birden fazla etiketi aynı anda çalıştırmak için (VEYA mantığı) `npx playwright test --grep "@smoke|@api"` komutunu kullanabilirsiniz.
 
 ### 🔍 Dosya ve Debug Bazlı
 *   **Belirli Bir Test Dosyasını Çalıştır:**
@@ -134,7 +137,7 @@ graph TD
 *   **`data/`**: Testlerde kullanılan dinamik verilerin (JSON formatında) tutulduğu yer.
 
 > [!TIP]
-> **Etiketleme (Tagging) Modu:** Playwright etiketleri (`@smoke` vb.) tam metin eşleşmesi ile çalışır. Bir testi `--grep @smoke` ile çalıştırdığınızda, Playwright hem dosya yoluna hem `describe` bloğuna hem de `test` ismine bakar. Bu yüzden hiyerarşik etiketleme yapabilirsiniz (Örn: `@api` ve `@smoke` aynı anda eşleşebilir).
+> **Etiketleme (Tagging) Standartı:** Yeni bir test eklerken başlığın sonuna mutlaka uygun etiketleri ekleyin (Örn: `@smoke @ui`). Playwright hiyerarşik etiketlemeyi destekler; bir test hem `@api` hem `@regression` etiketine sahip olabilir. Detaylı teknik standartlar için `implementation_plan.md` dosyasına bakabilirsiniz.
 
 ### 📖 Dosya ve Klasör Sözlüğü
 
