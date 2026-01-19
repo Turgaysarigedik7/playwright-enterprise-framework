@@ -89,13 +89,13 @@ Yeni test senaryolarını ve lokatörleri hızlıca tespit etmek için Playwrigh
 
 1.  **Aracı Başlatın:**
     ```bash
-    # 1. Standart Mod (Kayıt sonrası temizlenir)
+    # 1. Hızlı ve Temiz Başlangıç (Her kapanışta her şeyi siler)
     npm run codegen
 
-    # 2. Stealth Mod (Sadece Okur - Dosyayı şişirmez)
+    # 2. Beni Hatırla Modu (Doğrulamaları hatırlar, dosyayı şişirmez)
     npm run codegen:stealth
 
-    # 3. Stealth Mod (Güncelle/Kaydet - Doğrulama çıkarsa kullanın)
+    # 3. Oturumu Tazele (Eğer bot doğrulaması çıkarsa bir kez çalıştırın)
     npm run codegen:stealth-save
     ```
 2.  **Etkileşime Geçin:** Açılan tarayıcıda senaryonuzu gerçekleştirin. Kodlar **Inspector** penceresinde üretilecektir.
