@@ -89,14 +89,11 @@ Yeni test senaryolarını ve lokatörleri hızlıca tespit etmek için Playwrigh
 
 1.  **Aracı Başlatın:**
     ```bash
-    # 1. Hızlı ve Temiz Başlangıç (Her kapanışta her şeyi siler)
-    npm run codegen
-
-    # 2. Beni Hatırla Modu (Doğrulamaları hatırlar, dosyayı şişirmez)
-    npm run codegen:stealth
-
-    # 3. Oturumu Tazele (Eğer bot doğrulaması çıkarsa bir kez çalıştırın)
+    # 1. İlk Kurulum (İlk kez kullanırken veya insan doğrulaması çıkarsa bir kez çalıştırın)
     npm run codegen:stealth-save
+
+    # 2. Günlük Kullanım (İkinci seferden itibaren; doğrulamayı aşmak için bunu kullanın)
+    npm run codegen:stealth
     ```
 2.  **Etkileşime Geçin:** Açılan tarayıcıda senaryonuzu gerçekleştirin. Kodlar **Inspector** penceresinde üretilecektir.
 3.  **Lokatör Tespiti:** Pick Locator ile sayfadaki öğelerin en uygun selector'larını (`getByRole` vb.) kopyalayın.
@@ -106,10 +103,7 @@ Yeni test senaryolarını ve lokatörleri hızlıca tespit etmek için Playwrigh
     ```
 
 > [!TIP]
-> **Dosya Şişmesini Önleme:** Günlük kullanımda `codegen:stealth` kullanın (Dosya boyutu artmaz). Eğer site tekrar doğrulama sormaya başlarsa `codegen:stealth-save` ile bir kez oturumu tazeleyin.
-
-> [!NOTE]
-> **İnsan Doğrulaması:** `codegen:stealth` modunu ilk kez çalıştırdığınızda doğrulama çıkabilir. Bir kez geçtikten sonra bilgileriniz kaydedilir; ancak temiz bir test kodu üretmek adına doğrulamayı geçtikten sonra Recorder'ı kapatıp ikinci kez çalıştırmanız önerilir.
+> **Doğrulamayı Aşma İş Akışı:** İlk çalıştırmada `stealth-save` ile sayfayı açın ve bot doğrulamasını (CAPTCHA) geçin. Sonra pencereyi kapatın. Artık her seferinde `stealth` komutunu kullanarak Google/Cloudflare gibi doğrulamalara takılmadan hızlıca kayıt yapabilirsiniz.
 
 ---
 
