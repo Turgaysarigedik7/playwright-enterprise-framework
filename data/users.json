@@ -1,0 +1,12 @@
+{
+    "invalidUser": {
+        "username": "invalid_user",
+        "password": "REPLACE_ME",
+        "desc": "Geçersiz Kullanıcı Senaryosu"
+    },
+    "lockedUser": {
+        "username": "locked_user",
+        "password": "REPLACE_ME",
+        "desc": "Kilitli Hesap Senaryosu"
+    }
+}

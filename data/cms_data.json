@@ -1,0 +1,17 @@
+[
+    {
+        "desc": "Başarılı CMS Sorgusu",
+        "title": "crt_sales_channel",
+        "expectedStatus": 200
+    },
+    {
+        "desc": "Geçersiz Başlık Sorgusu",
+        "title": "invalid_title_123",
+        "expectedStatus": 404
+    },
+    {
+        "desc": "Boş Başlık Sorgusu",
+        "title": "",
+        "expectedStatus": 404
+    }
+]
