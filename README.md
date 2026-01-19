@@ -65,6 +65,7 @@ Framework, testlerin kategorize edilmesi ve seçici olarak çalıştırılması 
 | `@smoke` | Sistemin en kritik fonksiyonları (Login, Sepete Ekle vb.) | `npm run test:smoke` |
 | `@regression` | Tüm detaylı kontrol ve uç senaryolar. | `npm run test:regression` |
 | `@sanity` | Temel işlevsel doğrulamalar. | `npm run test:sanity` |
+| `@contract` | Pact ile yapılan Kontrat (Sözleşme) testleri. | `npx playwright test --grep @contract` |
 | `@api` | Sadece API katmanı testleri. | `npx playwright test --grep @api` |
 | `@ui` | Sadece tarayıcı üzerinden koşan testler. | `npx playwright test --grep @ui` |
 
