@@ -6,3 +6,5 @@ playwright/.auth/
 pacts/
 screenshots/
 environments/
+results.xml
+*.xml
