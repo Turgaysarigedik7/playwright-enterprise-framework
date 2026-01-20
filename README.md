@@ -473,3 +473,40 @@ Sisteme yeni bir ortam (Örn: `ucl`) eklemek çok basittir:
 1.  `environments/` klasörü içine `.env.ucl` dosyası oluşturun.
 2.  `package.json` içindeki `scripts` bölümüne şu formatta bir komut ekleyin:
     `"test:ucl:smoke": "cross-env ENV=ucl npx playwright test --grep @smoke"`
+
+---
+
+## 🏗️ CI/CD (Jenkins) Kaynak ve Paralel Çalışma Yönetimi
+
+Framework, Jenkins gibi CI (Continuous Integration) ortamlarında en yüksek stabiliteyi sağlamak üzere optimize edilmiştir.
+
+### ⚡ Workers (Aşçı Analojisi) ve Performans
+Playwright aynı anda birden fazla testi (`workers`) çalıştırabilir. Ancak CI sunucularının (Jenkins Slave/Agent) donanım gücü sınırlı olduğunda, çok fazla worker çalıştırmak testlerin "flaky" (kararsız) olmasına yol açar.
+
+**Mevcut Yapılandırma (`playwright.config.js`):**
+```javascript
+workers: process.env.CI ? 2 : undefined,
+```
+
+*   **Lokal Çalışma:** Bilgisayarınızın tüm işlemci çekirdeklerini kullanarak maksimum hızda koşar.
+*   **CI (Jenkins) Çalışma:** Sunucu kaynaklarını korumak ve "Timeout" hatalarını önlemek için otomatik olarak **2 worker** ile sınırlandırılır.
+
+> [!TIP]
+> **Neden 2 Worker?** Jenkins sunucuları genellikle 2-4 core CPU ile çalışır. Çok fazla paralel test açmak, tarayıcıların (Chromium vb.) işlemciyi aşırı yükleyip testlerin sebepsiz yere kalmasına (Time-out) neden olur. Bu sınırlama sayesinde Jenkins üzerinde %100 stabil koşum elde edilir.
+
+### 🎭 Headless Mod Kararlılığı Standartları
+Jenkins gibi sistemler testleri bir ekran arayüzü olmadan (**Headless**) çalıştırır. Lokal ve CI arasındaki tutarlılığı korumak için şu kurallar uygulanır:
+
+1.  **Görünmez Ekran (Viewport) Yönetimi:** Headless modda bazı elemanlar ekran dışında kalarak "Not Clickable" hatası verebilir. Bu nedenle `playwright.config.js` içinde standart bir ekran boyutu tanımlanmıştır.
+2.  **Akıllı Beklemeler (Smart Waits):** Headless mod normalden çok daha hızlı olduğu için sayfa yüklenmeden işleme devam edebilir. Testlerde asla sabit saniyeli bekleme (`waitForTimeout`) kullanılmaz; bunun yerine eleman bazlı (`waitForSelector`) dinamik beklemeler kullanılır.
+3.  **Lokal Doğrulama:** Jenkins'e kod göndermeden önce testlerin lokalde şu komutla headless modda denendiğinden emin olunur:
+    ```bash
+    npx playwright test --headless
+    ```
+
+### 🔒 Global Setup (Auth) Dayanıklılığı
+Framework'ün en kritik parçası olan kimlik doğrulama süreci, Jenkins ve CI ortamlarında güvenliği ve sürekliliği sağlamak için şu mekanizmalarla korunur:
+
+1.  **Hata Erken Tespiti (Fail-Fast):** Login süreci (API Auth) başarısız olduğunda sistem tüm test suite'ini durdurur ve detaylı bir `cURL` hata logu üretir. Bu, bozuk bir oturumla saatlerce boşuna test koşulmasını engeller.
+2.  **Oturum İzolasyonu:** Her ortam (`qa`, `staging`) kendi oturum verisini yönetir. CI üzerinde klasör yetki hatalarını önlemek için oturum dosyalarının kaydedileceği yollar otomatik olarak yapılandırılır.
+3.  **Tekrar Deneme (Retries):** Geçici ağ kesintileri veya API gecikmelerine karşı, login süreci kritik bir hata almadığı sürece belirli aralıklarla sistem tarafından otomatik olarak yeniden denenecek şekilde kurgulanabilir.
