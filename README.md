@@ -31,11 +31,18 @@ Framework'ün teknik detaylarını ve çalışma prensiplerini daha derinlemesin
     npx playwright install
     ```
 2.  **Ortam Ayarlarını Yapın:**
-    `.env` dosyasını oluşturun ve şunları ekleyin:
-    ```env
-    BASE_URL=https://...
-    APP_USERNAME=...
-    PASSWORD=...
+    
+    **Lokal Geliştirme için:**
+    ```bash
+    cp .env.example .env
+    # .env dosyasını gerçek bilgilerinizle doldurun
+    ```
+    
+    **Farklı Ortamlar için (QA, Staging):**
+    ```bash
+    cp environments/.env.qa.example environments/.env.qa
+    cp environments/.env.staging.example environments/.env.staging
+    # Her dosyayı ilgili ortam bilgileriyle doldurun
     ```
 3.  **Testleri Koşturun:**
 
