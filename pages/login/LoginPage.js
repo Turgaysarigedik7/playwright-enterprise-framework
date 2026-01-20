@@ -10,9 +10,9 @@ class LoginPage extends BasePage {
    */
   constructor(page) {
     super(page); // BasePage constructor'ını çağır
-    this.usernameInput = page.locator(locators.oktaUsername);
-    this.passwordInput = page.locator(locators.oktaPassword);
-    this.loginButton = page.locator(locators.oktaSubmit);
+    this.usernameInput = page.locator(locators.username);
+    this.passwordInput = page.locator(locators.password);
+    this.loginButton = page.locator(locators.submit);
   }
 
   /**
