@@ -10,6 +10,19 @@ const env = process.env.ENV || '';
 const envPath = env ? path.resolve(__dirname, 'environments', `.env.${env}`) : path.resolve(__dirname, '.env');
 require('dotenv').config({ path: envPath });
 
+/**
+ * CI/CD ve Lokal Güvenlik Kontrolü:
+ * BASE_URL tanımlı değilse testi hemen durdurur ve açıklayıcı hata verir.
+ */
+if (!process.env.BASE_URL) {
+  console.error('\n--- 🚨 KRİTİK YAPILANDIRMA HATASI 🚨 ---');
+  console.error('BASE_URL bulunamadı! Lütfen şunları kontrol edin:');
+  console.error('1. Lokal için: .env veya environments/.env.' + (env || 'qa') + ' dosyası mevcut mu?');
+  console.error('2. CI/CD için: Repo Secrets (BASE_URL) tanımlandı mı?');
+  console.error('-------------------------------------------\n');
+  process.exit(1);
+}
+
 module.exports = defineConfig({
   testDir: './tests',
   fullyParallel: true,
