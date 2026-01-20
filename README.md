@@ -15,11 +15,20 @@ Bu framework, sadece test yazmak için değil, **kurumsal ölçekte kalite güve
 
 ---
 
+## 📚 Detaylı Dokümantasyon
+
+Framework'ün teknik detaylarını ve çalışma prensiplerini daha derinlemesine incelemek için:
+
+*   [🚀 Test Çalışma Senaryosu (Adım Adım)](docs/execution_scenario.md) - Bir komut girildiğinde arkada dönen tüm süreçler.
+
+---
+
 ## 🚀 Hızlı Başlangıç
 
-1.  **Bağımlılıkları Yükleyin:**
+1.  **Bağımlılıkları ve Tarayıcıları Yükleyin:**
     ```bash
     npm install
+    npx playwright install
     ```
 2.  **Ortam Ayarlarını Yapın:**
     `.env` dosyasını oluşturun ve şunları ekleyin:
@@ -155,6 +164,8 @@ graph TD
     D -->|Inject Edilir| E[Tests]
 ```
 
+---
+
 ### ⚙️ Core & Mimari
 *   **`api/`**: API Page Object Model (POM) yapısı.
     *   `BaseService.js`: Tüm API isteklerinin (GET, POST vb.) geçtiği merkezi sarmalayıcı. Hata loglama ve header yönetimi burada yapılır.
@@ -198,36 +209,56 @@ Proje, her testte tekrar UI üzerinden login olmak yerine `auth.setup.js` üzeri
 - **Stabilite:** Okta CAPTCHA veya Headless bloklamalarını bypass eder.
 - **Saklama:** Oturum bilgisi `playwright/.auth/user.json` dosyasında saklanır ve tüm testlere otomatik dağıtılır.
 
-### 2. Centralized Error Handling & Logging (API)
-`BaseService` içinde kurulu olan `_handleError` mekanizması sayesinde, bir API testi patladığında veya network hatası oluştuğunda terminalde şunlar otomatik görünür:
-- **URL & Method:** İsteğin nereye ve nasıl atıldığı.
-- **Duration (Süre):** İsteğin kaç `ms` sürdüğü (Performans takibi için).
-- **cURL Komutu:** Hatayı localde simüle edebilmeniz için hazır kopyala-yapıştır komut.
-- **Pretty Response:** JSON yanıtların formatlanmış hali.
+### 2. Yapılandırılmış Loglama & Gözlemlenebilirlik (Structured Logging)
+Framework, hem terminalde hem de Playwright raporlarında (HTML report) detaylı izlenebilirlik sağlayan merkezi bir `Logger` sistemi kullanır.
 
-**Örnek Hata Çıktısı:**
+- **UI Gözlemlenebilirliği:** Her tıklama, veri girişi ve sayfa navigasyonu `[LoginPage]` veya `[HomePage]` gibi bağlamlarla loglanır.
+- **API Gözlemlenebilirliği:** Tüm istekler, süreleri ve statü kodları otomatik kaydedilir.
+- **Entegre cURL Desteği:** Bir API testi patladığında, hatanın hemen altında hazır bir cURL komutu üretilir.
+
+**Örnek Hibrit Hata Çıktısı:**
 ```text
---- ⛔ API ERROR DETECTED ⛔ ---
-Timestamp : 2026-01-18T10:42:12.643Z
-URL       : https://api.example.com/v1/users
-Method    : POST
-Status    : 400 (Bad Request)
-Duration  : 748ms
-cURL      : curl -X POST "https://api.example.com/v1/users" -d '{"name": "John"}'
-Request Body/Params :
-{
-  "name": "John"
-}
-Response Body :
-{
-  "error": "Missing field: email",
-  "code": "VALIDATION_ERROR"
-}
------------------------------------
+[14:20:15][ERROR][BaseService] API Error: 400 Bad Request | POST /authenticate
+┌─── API Error Details ───┐
+│ Status    : 400
+│ Method    : POST
+│ Duration  : 450ms
+│ Request ID: req-12345
+│ Request Payload : { "user": "tomsmith" }
+│ cURL      : curl -X POST "https://..." -d '{"user":"..."}'
+│ Response Body : { "error": "Invalid password" }
+└─────────────────────────┘
 ```
 
-### 3. Data-Driven Testing (DDT)
-API testleri (`cms.spec.js`), veriyi kod içinden değil `data/` altındaki JSON dosyalarından çeker. Böylece kod değişmeden onlarca farklı senaryo koşturulabilir.
+### 3. Akıllı Etkileşimler (Smart Interactions)
+UI testlerinin en büyük sorunu olan "kararsızlık" (flakiness), `BasePage` seviyesindeki akıllı metodlarla çözülmüştür:
+- **`clickSafe(selector)`:** Elementin sadece var olmasını değil, tıklanabilir ve görünür olmasını bekler. Hata anında log basar.
+- **`fillInput(selector, text)`:** Giriş alanını temizler (`clear`) ve ardından veri girişini güvenli şekilde yapar.
+- **`waitForNetworkIdle()`:** Sayfa yüklenmiş olsa bile arka plandaki API isteklerinin (Network) durulmasını bekleyerek senkronizasyon sağlar.
+- **Auto-Context Logging:** Her sayfa objesi, logların başına kendi ismini (örn: `[LoginPage]`) otomatik ekler.
+
+### 4. API Şema Doğrulama (Contract Safety)
+Framework, API yanıtlarının veri yapısını otomatik denetlemek için `ajv` kütüphanesini kullanır. Bu sayede sadece HTTP 200 kontrolü değil, dönen verinin tipi ve eksiksizliği de garanti altına alınır.
+
+- **Otomatik Tip Kontrolü:** `id` sayı mı, `email` formatı doğru mu gibi kontroller milisaniyeler içinde yapılır.
+- **Hata Detayı:** Şema uyuşmazlığında hangi alanın neden hatalı olduğu terminalde kırmızı bir çerçeve içinde listelenir.
+
+**Örnek Kullanım:**
+```javascript
+const userSchema = {
+    type: "object",
+    required: ["id", "username"],
+    properties: {
+        id: { type: "integer" },
+        username: { type: "string" }
+    }
+};
+
+const response = await userService.getUser(1);
+await userService.validateSchema(userSchema, await response.json());
+```
+
+### 5. Data-Driven Testing (DDT)
 
 ### 4. Pact Contract Testing
 Backend ve Frontend arasındaki veri sözleşmesini garanti altına almak için `tests/contract/` altında kontrat testleri bulunur. Oluşturulan kontratlar `pacts/` klasöründe saklanır.

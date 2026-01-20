@@ -1,3 +1,11 @@
+const { Logger } = require('../utils/Logger');
+const Ajv = require('ajv');
+const addFormats = require('ajv-formats');
+
+// AJV instance'ını bir kez oluşturup reuse ediyoruz
+const ajv = new Ajv({ allErrors: true, verbose: true });
+addFormats(ajv);
+
 /**
  * @typedef {import('@playwright/test').APIRequestContext} APIRequestContext
  */
@@ -10,50 +18,68 @@ class BaseService {
     constructor(request, baseURL) {
         this.request = request;
         this.baseURL = baseURL;
+        this.logger = new Logger(this.constructor.name);
     }
 
     /**
-     * Merkezi istek yürütücü. İstekleri sarmalar ve hataları yakalar.
+     * API yanıtının şemasını doğrular.
+     * @param {object} schema - JSON Şema objesi
+     * @param {object} data - Doğrulanacak veri (response body)
+     * @returns {void}
+     */
+    async validateSchema(schema, data) {
+        const validate = ajv.compile(schema);
+        const valid = validate(data);
+
+        if (!valid) {
+            const errorDetails = ajv.errorsText(validate.errors);
+            const logMsg = `SCHEMA VALIDATION ERROR: Yanıt yapısı beklenen şema ile uyuşmuyor!`;
+            await this.logger.error(logMsg);
+
+            console.error(`\x1b[91m┌─── Schema Validation Details ───┐\x1b[0m`);
+            validate.errors.forEach((err, index) => {
+                console.error(`\x1b[91m│\x1b[0m ${index + 1}. Hata: ${err.instancePath} ${err.message}`);
+                console.error(`\x1b[91m│\x1b[0m    Beklenen: ${JSON.stringify(err.params)}`);
+            });
+            console.error(`\x1b[91m└─────────────────────────────────┘\x1b[0m\n`);
+
+            throw new Error(`Schema validation failed: ${errorDetails}`);
+        }
+
+        await this.logger.success('Schema validation successful.');
+    }
+
+    /**
+     * Merkezi istek yürütücü.
      * @protected
-     * @param {string} method - HTTP metodu (get, post, put, delete, patch)
-     * @param {string} endpoint - İstek atılacak endpoint
-     * @param {object} [options={}] - Playwright request opsiyonları
-     * @returns {Promise<import('@playwright/test').APIResponse>}
      */
     async _execute(method, endpoint, options = {}) {
         const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
         const startTime = Date.now();
 
+        await this.logger.info(`API Request: ${method.toUpperCase()} ${url}`);
+
         try {
             const response = await this.request[method](url, options);
             const duration = Date.now() - startTime;
 
-            // Eğer yanıt başarılı değilse (2xx dışındaysa) detaylı logla
             if (!response.ok()) {
                 await this._handleError(response, method, url, options, duration);
+            } else {
+                await this.logger.success(`API Response: ${response.status()} (${duration}ms)`);
             }
 
             return response;
         } catch (error) {
             const duration = Date.now() - startTime;
-            console.error(`\n--- 🚨 NETWORK/CRITICAL ERROR 🚨 ---`);
-            console.error(`URL       : ${url}`);
-            console.error(`Method    : ${method.toUpperCase()}`);
-            console.error(`Duration  : ${duration}ms`);
-            console.error(`Error     :`, error.message);
-            console.error(`cURL      : ${this._generateCurl(method, url, options)}`);
-            console.error(`------------------------------------\n`);
+            await this.logger.error(`CRITICAL NETWORK ERROR: ${method.toUpperCase()} ${url} (${duration}ms)`, error);
             throw error;
         }
     }
 
     /**
-     * Detaylı hata loglayıcı. Hata anında tüm snapshot verisini basar.
+     * Detaylı hata loglayıcı.
      * @private
-     * @param {import('@playwright/test').APIResponse} response - Playwright API response nesnesi
-     * @param {string} method - İstek metodu
-     * @param {string} url - İstek URL'i
-     * @param {object} options - İstek opsiyonları
      */
     async _handleError(response, method, url, options, duration) {
         const status = response.status();
@@ -61,111 +87,54 @@ class BaseService {
 
         try {
             errorBody = await response.text();
-            // JSON ise güzelleştir
             try {
                 errorBody = JSON.stringify(JSON.parse(errorBody), null, 2);
-            } catch (e) { /* düz metin devam et */ }
+            } catch (e) { /* text format */ }
         } catch (e) {
             errorBody = "Response body could not be read.";
         }
 
-        console.error('\n--- ⛔ API ERROR DETECTED ⛔ ---');
-        console.error(`Timestamp : ${new Date().toISOString()}`);
-        console.error(`URL       : ${url}`);
-        console.error(`Method    : ${method.toUpperCase()}`);
-        console.error(`Status    : ${status} (${response.statusText()})`);
-        console.error(`Duration  : ${duration}ms`);
-        console.error(`Request ID: ${response.headers()['x-request-id'] || 'N/A'}`);
-        console.error(`cURL      : ${this._generateCurl(method, url, options)}`);
+        const logMsg = `API Error: ${status} ${response.statusText()} | ${method.toUpperCase()} ${url}`;
+        await this.logger.error(logMsg);
+
+        // Detaylı teknik metadata (Terminalde gruplanmış görünür)
+        console.error(`\x1b[90m┌─── API Error Details ───┐\x1b[0m`);
+        console.error(`\x1b[90m│\x1b[0m Status    : ${status}`);
+        console.error(`\x1b[90m│\x1b[0m Method    : ${method.toUpperCase()}`);
+        console.error(`\x1b[90m│\x1b[0m Duration  : ${duration}ms`);
+        console.error(`\x1b[90m│\x1b[0m Request ID: ${response.headers()['x-request-id'] || 'N/A'}`);
 
         const requestPayload = options.data || options.params || 'None';
         const formattedRequest = typeof requestPayload === 'object' ? JSON.stringify(requestPayload, null, 2) : requestPayload;
-        console.error(`Request Body/Params :\n${formattedRequest}`);
+        console.error(`\x1b[90m│\x1b[0m Request Payload :\n${formattedRequest}`);
 
-        console.error(`Response Header Content-Type: ${response.headers()['content-type']}`);
-        console.error(`Response Body :\n${errorBody}`);
-        console.error('-----------------------------------\n');
-
-        if (status === 401 || status === 403) {
-            console.warn('⚠️  Auth Error: Session might be expired or invalid.');
-        }
+        console.error(`\x1b[90m│\x1b[0m cURL      : ${this._generateCurl(method, url, options)}`);
+        console.error(`\x1b[90m│\x1b[0m Response Body :\n${errorBody}`);
+        console.error(`\x1b[90m└─────────────────────────┘\x1b[0m\n`);
     }
 
     /**
-     * İstek verilerinden bir cURL komutu oluşturur.
-     * @private
+     * cURL komutu oluşturur (Hata ayıklama için).
      */
     _generateCurl(method, url, options) {
         let curl = `curl -X ${method.toUpperCase()} "${url}"`;
-
-        // Headers
         if (options.headers) {
             for (const [key, value] of Object.entries(options.headers)) {
                 curl += ` -H "${key}: ${value}"`;
             }
         }
-
-        // Data / Body
         if (options.data) {
-            const data = typeof options.data === 'string' ? options.data : JSON.stringify(options.data);
+            const data = JSON.stringify(options.data);
             curl += ` -d '${data}'`;
         }
-
-        // Params (Query string) - Playwright URL'e eklemiş olabilir ama biz yine de loglayalım
-        if (options.params && Object.keys(options.params).length > 0) {
-            const queryParams = new URLSearchParams(options.params).toString();
-            if (!url.includes('?')) {
-                curl = curl.replace(url, `${url}?${queryParams}`);
-            }
-        }
-
         return curl;
     }
 
-    /**
-     * GET isteği gönderir.
-     * @param {string} endpoint 
-     * @param {object} [params={}] - Query parametreleri
-     */
-    async get(endpoint, params = {}) {
-        return this._execute('get', endpoint, { params });
-    }
-
-    /**
-     * POST isteği gönderir.
-     * @param {string} endpoint 
-     * @param {object} [data={}] - Request body
-     */
-    async post(endpoint, data = {}) {
-        return this._execute('post', endpoint, { data });
-    }
-
-    /**
-     * PUT isteği gönderir.
-     * @param {string} endpoint 
-     * @param {object} [data={}] - Request body
-     */
-    async put(endpoint, data = {}) {
-        return this._execute('put', endpoint, { data });
-    }
-
-    /**
-     * DELETE isteği gönderir.
-     * @param {string} endpoint 
-     * @param {object} [params={}] - Query parametreleri
-     */
-    async delete(endpoint, params = {}) {
-        return this._execute('delete', endpoint, { params });
-    }
-
-    /**
-     * PATCH isteği gönderir.
-     * @param {string} endpoint 
-     * @param {object} [data={}] - Request body
-     */
-    async patch(endpoint, data = {}) {
-        return this._execute('patch', endpoint, { data });
-    }
+    async get(endpoint, params = {}) { return this._execute('get', endpoint, { params }); }
+    async post(endpoint, data = {}) { return this._execute('post', endpoint, { data }); }
+    async put(endpoint, data = {}) { return this._execute('put', endpoint, { data }); }
+    async delete(endpoint, params = {}) { return this._execute('delete', endpoint, { params }); }
+    async patch(endpoint, data = {}) { return this._execute('patch', endpoint, { data }); }
 }
 
 module.exports = { BaseService };

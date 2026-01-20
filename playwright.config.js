@@ -29,10 +29,9 @@ module.exports = defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [
-    ['html'],
-    ['junit', { outputFile: 'results.xml' }]
-  ],
+  reporter: process.env.CI
+    ? [['list'], ['junit', { outputFile: 'results.xml' }]]
+    : [['html'], ['junit', { outputFile: 'results.xml' }]],
   use: {
     baseURL: process.env.BASE_URL,
     // Hata anında görsel kanıt topla
