@@ -1,5 +1,14 @@
 const { defineConfig, devices } = require('@playwright/test');
-require('dotenv').config();
+const path = require('path');
+
+/**
+ * Profesyonel Ortam Yönetimi: 
+ * Dışarıdan gelen ENV değişkenine göre (qa, staging vb.) ilgili .env dosyasını yükler.
+ * Varsayılan olarak ana .env dosyasını kullanır.
+ */
+const env = process.env.ENV || '';
+const envPath = env ? path.resolve(__dirname, 'environments', `.env.${env}`) : path.resolve(__dirname, '.env');
+require('dotenv').config({ path: envPath });
 
 module.exports = defineConfig({
   testDir: './tests',

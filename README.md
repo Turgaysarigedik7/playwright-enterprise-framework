@@ -431,3 +431,45 @@ jobs:
 | **Trace Görünmüyor** | Testin gerçekten "fail" olduğundan emin olun (Sadece başarısızlarda trace saklanır). |
 
 ---
+
+---
+
+## 🌍 Çoklu Ortam (Multi-Environment) Yönetimi
+
+Bu framework, kurumsal ihtiyaçlara uygun olarak QA, Staging ve Production gibi farklı ortamlar arasında dinamik geçiş yapabilen profesyonel bir yapıya sahiptir.
+
+### 🛡️ Kullanılan Teknolojiler
+*   **dotEnv:** Ortama özel değişkenleri (`BASE_URL`, `CREDENTIALS`) yönetmek için kullanılır.
+*   **cross-env:** Farklı işletim sistemlerinde (Windows, Mac, Linux) ortam değişkenlerini sorunsuz bir şekilde tanımlamak için kullanılır.
+
+### 🏗️ Ortam Yapısı ve Klasörleme
+Tüm ortam dosyaları `environments/` klasörü altında merkezi olarak yönetilir:
+*   `environments/.env.qa`: QA ortamı ayarları.
+*   `environments/.env.staging`: Staging ortamı ayarları.
+
+> [!CAUTION]
+> **Güvenlik Notu:** `environments/` klasörü ve içindeki `.env` dosyaları hassas veri içerebileceği için `.gitignore` dosyasına eklenmiştir ve asla uzak sunucuya (Git) gönderilmez.
+
+### ⚙️ Teknik Uygulama (playwright.config.js)
+Framework, çalışma anında gönderilen `ENV` değişkenine göre ilgili dosyayı otomatik yükler:
+
+```javascript
+const env = process.env.ENV || '';
+const envPath = env ? path.resolve(__dirname, 'environments', `.env.${env}`) : path.resolve(__dirname, '.env');
+require('dotenv').config({ path: envPath });
+```
+
+### 🚀 Ortama Özel Test Koşturma
+Farklı ortamlarda test çalıştırmak için `package.json` dosyasına eklenen özel komutlar kullanılır:
+
+| Senaryo | Komut |
+| :--- | :--- |
+| **QA Ortamında Smoke Test** | `npm run test:qa:smoke` |
+| **Staging Ortamında Smoke Test** | `npm run test:staging:smoke` |
+| **Varsayılan (.env) Smoke Test** | `npm run test:smoke` |
+
+### ➕ Yeni Ortam Ekleme
+Sisteme yeni bir ortam (Örn: `ucl`) eklemek çok basittir:
+1.  `environments/` klasörü içine `.env.ucl` dosyası oluşturun.
+2.  `package.json` içindeki `scripts` bölümüne şu formatta bir komut ekleyin:
+    `"test:ucl:smoke": "cross-env ENV=ucl npx playwright test --grep @smoke"`

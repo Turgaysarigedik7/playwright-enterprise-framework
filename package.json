@@ -8,6 +8,8 @@
     "test:smoke": "playwright test --grep @smoke",
     "test:regression": "playwright test --grep @regression",
     "test:sanity": "playwright test --grep @sanity",
+    "test:qa:smoke": "cross-env ENV=qa npx playwright test --grep @smoke",
+    "test:staging:smoke": "cross-env ENV=staging npx playwright test --grep @smoke",
     "codegen": "node utils/codegen.js",
     "codegen:auth": "node utils/codegen.js --auth",
     "codegen:stealth": "node utils/codegen.js --stealth",
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@pact-foundation/pact": "^16.0.4",
     "@playwright/test": "^1.40.0",
+    "cross-env": "^10.1.0",
     "rimraf": "^6.1.2"
   },
   "dependencies": {
