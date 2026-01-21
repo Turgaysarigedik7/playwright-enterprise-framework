@@ -2,5 +2,6 @@
     "username": "#username, #okta-signin-username, input[name='username'], input[name='identifier']",
     "password": "#password, #okta-signin-password, input[name='password'], input[name='credentials.passcode']",
     "submit": "button[type='submit'], #okta-signin-submit, input[type='submit']",
+    "nextButton": "button[type='submit'], #idSIButton9, [id='identifierNext']",
     "successMessage": "#flash"
 }
